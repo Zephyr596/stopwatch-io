@@ -9,3 +9,14 @@
 
 # macOS
 .DS_Store
+
+# Local credentials and machine-specific API endpoint (never commit)
+include/LocalConfig.h
+
+# Backend deployment secrets and local trust material
+backend/private/
+backend/.env
+.local/
+
+__pycache__/
+*.pyc

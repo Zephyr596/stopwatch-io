@@ -1,0 +1,32 @@
+services:
+  api:
+    build: .
+    image: stopwatch-vehicle-api:local
+    restart: unless-stopped
+    ports:
+      - "${BIND_IP:?Set the server primary private IP}:443:8443"
+    environment:
+      DB_HOST: database
+      DB_NAME: teslamate
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - ./private/api_token:/run/secrets/api_token:ro
+      - ./private/db_password:/run/secrets/db_password:ro
+      - ./private/server.crt:/run/tls/server.crt:ro
+      - ./private/server.key:/run/tls/server.key:ro
+    networks: [teslamate]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 160m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+networks:
+  teslamate:
+    external: true
+    name: teslamate_default
