@@ -2,6 +2,8 @@
 #include <M5Unified.h>
 #include "../core/Application.h"
 namespace sw {
+enum class PetGesture : uint8_t;
+
 struct DeviceStatus {
     int batteryPercent = -1;
     uint32_t freeHeap = 0, minHeap = 0, freePsram = 0;
@@ -11,6 +13,7 @@ public:
     bool begin();
     bool poll(uint32_t now, InputEvent& event);
     void feedback(uint32_t now, bool enabled);
+    void playPetSound(PetGesture gesture, bool playSutra);
     const DeviceStatus& status() const { return status_; }
     bool ready() const { return ready_; }
 private:

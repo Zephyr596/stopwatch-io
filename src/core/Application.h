@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace sw {
-enum class AppId : uint8_t { Home, Tesla, Motorcycle, Settings, None };
+enum class AppId : uint8_t { Home, Tesla, Motorcycle, Settings, Codex, None };
 enum class InputType : uint8_t { Next, Confirm, Home, Tap };
 struct InputEvent { InputType type; int16_t x = 0, y = 0; };
 struct Rect {
@@ -14,6 +14,9 @@ struct Rect {
 };
 inline constexpr Rect homeButton{153, 374, 160, 40};
 inline constexpr std::array<Rect, 3> rows{{{73, 110, 320, 76}, {73, 190, 320, 76}, {73, 270, 320, 76}}};
+inline constexpr std::array<Rect, 4> launcherRows{{
+    {73, 108, 320, 60}, {73, 174, 320, 60}, {73, 240, 320, 60}, {73, 306, 320, 60}
+}};
 class Application {
 public:
     virtual ~Application() = default;
@@ -22,11 +25,17 @@ public:
     virtual void onExit() = 0;
     virtual AppId onInput(const InputEvent&) = 0;
 };
-struct AppEntry { AppId id; const char* name; Application* app; };
+struct AppEntry {
+    AppId id;
+    const char* name;
+    Application* app;
+    Rect homeTarget = homeButton;
+};
+using AppRegistry = std::array<AppEntry, static_cast<unsigned>(AppId::None)>;
 class AppManager {
 public:
     using SwitchLog = void (*)(const char*);
-    AppManager(const std::array<AppEntry, 4>& registry, SwitchLog log = nullptr)
+    AppManager(const AppRegistry& registry, SwitchLog log = nullptr)
         : registry_(registry), log_(log) {}
     bool switchTo(AppId id) {
         if (id == current_) return false;
@@ -35,6 +44,7 @@ public:
             if (active_) active_->onExit();
             active_ = entry.app;
             current_ = id;
+            homeTarget_ = entry.homeTarget;
             active_->onEnter();
             if (log_) log_(entry.name);
             return true;
@@ -44,7 +54,7 @@ public:
     void input(const InputEvent& event) {
         if (!active_) return;
         if (event.type == InputType::Home ||
-            (current_ != AppId::Home && event.type == InputType::Tap && homeButton.contains(event.x, event.y))) {
+            (current_ != AppId::Home && event.type == InputType::Tap && homeTarget_.contains(event.x, event.y))) {
             switchTo(AppId::Home);
             return;
         }
@@ -54,9 +64,10 @@ public:
     void update(uint32_t now) { if (active_) active_->onUpdate(now); }
     AppId current() const { return current_; }
 private:
-    std::array<AppEntry, 4> registry_;
+    AppRegistry registry_;
     SwitchLog log_;
     Application* active_ = nullptr;
     AppId current_ = AppId::None;
+    Rect homeTarget_ = homeButton;
 };
 } // namespace sw

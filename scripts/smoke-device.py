@@ -29,7 +29,7 @@ def drain(seconds):
 
 def command(value):
     port.write(value.encode())
-    drain(0.06)  # Allows the 33ms renderer to process the transition.
+    return drain(0.06)  # Allows the 33ms renderer to process the transition.
 
 
 def state():
@@ -52,14 +52,16 @@ def cycle():
     command('a'); command('b')  # Motorcycle
     command('h')
     command('a'); command('b')  # Settings, do not activate haptics
-    command('h'); command('a')  # Return launcher selection to Tesla
+    command('h')
+    command('a'); command('b')  # Codex
+    command('b'); command('a')  # Return launcher selection to Tesla
 
 
 try:
     print(drain(1), end='')
     command('m')
     command('h')
-    for _ in range(3):
+    for _ in range(4):
         if state()['launch'] == 0:
             break
         command('a')
@@ -89,6 +91,42 @@ try:
     assert state()['app'] == 3
     command('a'); command('b')
     assert state()['app'] == 0
+    command('a'); command('b')
+    assert state()['app'] == 4
+    command('1')
+    assert state()['codex'] == 1
+    command('2')
+    assert state()['codex'] == 2
+    before_puff = state()
+    command('p')  # Inject a touch on the Smoke button.
+    drain(0.6)
+    puff = state()
+    assert puff['smokes'] == before_puff['smokes'] + 1 and puff['waves'] == before_puff['waves']
+    assert puff['paints'] >= before_puff['paints'] + 2
+    command('k')  # Inject a touch on the Whisky button.
+    drain(0.95)
+    sip = state()
+    assert sip['drinks'] == puff['drinks'] + 1 and sip['smokes'] == puff['smokes'] and sip['waves'] == puff['waves']
+    assert sip['paints'] >= puff['paints'] + 4
+    rolls = []
+    for _ in range(12):
+        command('g')
+        rolls.append(state()['dice'])
+    assert all(1 <= value <= 6 for value in rolls) and len(set(rolls)) > 1, rolls
+    drain(0.85)
+    rolled = state()
+    assert rolled['rolls'] == sip['rolls'] + 12 and rolled['dice'] == rolls[-1]
+    for _ in range(2):
+        audio = command('j') + drain(0.18)
+        assert '[muyu] audio=1' in audio, audio
+    knocks = state()
+    assert knocks['knocks'] == rolled['knocks'] + 2 and knocks['rolls'] == rolled['rolls']
+    print('Dice results:', rolls, '| Wooden percussion: two playbacks accepted', flush=True)
+    waves = state()['waves']
+    command('a'); command('b')  # Wave at the pet.
+    assert state()['waves'] == waves + 1
+    command('h')
+    assert state()['app'] == 0
     command('a')
     cycle()  # Warm all rendering paths before memory comparison.
     before = state()
@@ -102,6 +140,6 @@ try:
     assert after['min'] >= before['min'] - 4096, (before, after)
     print('Heap before:', before)
     print('Heap after: ', after)
-    print('PASS: network-independent mock, idle redraw suppression, mock updates, charging, all apps, switching and heap stability')
+    print('PASS: app switching, mock charging, all Codex pet actions, dice range, audio playback, heap stability')
 finally:
     port.close()

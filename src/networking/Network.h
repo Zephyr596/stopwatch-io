@@ -6,6 +6,7 @@ public:
     void begin();
     void update(uint32_t now);
     void reconnect();
+    void requestConnect(uint32_t now);
     bool online() const { return online_; }
     const char* label() const;
     const char* address() const { return address_; }

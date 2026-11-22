@@ -3,10 +3,11 @@
 #include "../services/VehicleData.h"
 namespace sw {
 struct LaunchItem { AppId id; const char* title; const char* subtitle; };
-inline constexpr std::array<LaunchItem, 3> launchItems{{
-    {AppId::Tesla, "TESLA", "Vehicle dashboard"},
-    {AppId::Motorcycle, "MOTORCYCLE", "Planned / placeholder"},
-    {AppId::Settings, "SETTINGS", "Wi-Fi / source / haptic"}
+inline constexpr std::array<LaunchItem, launcherRows.size()> launchItems{{
+    {AppId::Tesla, "Tesla", "Vehicle dashboard"},
+    {AppId::Motorcycle, "Motorcycle", "Coming soon"},
+    {AppId::Settings, "Settings", "Wi-Fi, data & haptics"},
+    {AppId::Codex, "Codex", "Pet & chat status"}
 }};
 class Launcher final : public Application {
 public:
@@ -17,8 +18,8 @@ public:
         if (e.type == InputType::Next) selected_ = (selected_ + 1) % launchItems.size();
         if (e.type == InputType::Confirm) return launchItems[selected_].id;
         if (e.type == InputType::Tap) {
-            for (size_t i = 0; i < rows.size(); ++i) {
-                if (rows[i].contains(e.x, e.y)) { selected_ = i; return launchItems[i].id; }
+            for (size_t i = 0; i < launcherRows.size(); ++i) {
+                if (launcherRows[i].contains(e.x, e.y)) { selected_ = i; return launchItems[i].id; }
             }
         }
         return AppId::None;

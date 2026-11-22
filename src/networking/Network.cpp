@@ -3,6 +3,7 @@
 #include <Config.h>
 #include <ctime>
 namespace sw {
+namespace { constexpr uint32_t retryIntervalMs = 30000; }
 void Network::begin() {
     configured_ = SW_WIFI_SSID[0] != '\0';
     if (!configured_) { Serial.println("[wifi] not configured"); return; }
@@ -22,8 +23,14 @@ void Network::reconnect() {
     lastAttempt_ = millis();
     Serial.println("[wifi] diagnostic disconnect; reconnect in 30s");
 }
+void Network::requestConnect(uint32_t now) {
+    if (configured_ && !online_ && !attempting_) {
+        scanRequested_ = false;
+        lastAttempt_ = now - retryIntervalMs;
+    }
+}
 const char* Network::label() const {
-    return online_ ? "WIFI CONNECTED" : !configured_ ? "WIFI UNCONFIGURED" : attempting_ ? "WIFI CONNECTING" : "WIFI OFFLINE";
+    return online_ ? "Connected" : !configured_ ? "Setup needed" : attempting_ ? "Connecting" : "Offline";
 }
 void Network::update(uint32_t now) {
     if (!configured_) return;
@@ -70,7 +77,7 @@ void Network::update(uint32_t now) {
         // Diagnostic scan during retry cooldown; never wait for results in the UI loop.
         scanRequested_ = !scanned_;
     }
-    if (!attempting_ && !scanning_ && uint32_t(now - lastAttempt_) >= 30000) {
+    if (!attempting_ && !scanning_ && uint32_t(now - lastAttempt_) >= retryIntervalMs) {
         WiFi.begin(SW_WIFI_SSID, SW_WIFI_PASSWORD);
         lastAttempt_ = now;
         attempting_ = true;

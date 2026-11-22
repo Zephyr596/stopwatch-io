@@ -12,6 +12,7 @@
 
 # Local credentials and machine-specific API endpoint (never commit)
 include/LocalConfig.h
+stopwatch-lan.key
 
 # Backend deployment secrets and local trust material
 backend/private/

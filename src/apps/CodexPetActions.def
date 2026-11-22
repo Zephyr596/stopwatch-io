@@ -1,0 +1,6 @@
+// Action, display label, sprite clip, diagnostic key, Watch button x, y and width.
+SW_PET_ACTION(Smoke, "Smoke", smoking, 'p', 102, 335, 62)
+SW_PET_ACTION(Whisky, "Whisky", drinking, 'k', 169, 335, 65)
+SW_PET_ACTION(Dice, "Dice", rolling, 'g', 239, 335, 60)
+SW_PET_ACTION(Muyu, "Muyu", knocking, 'j', 304, 335, 60)
+SW_PET_ACTION(Workout, "撸铁", benchPress, 'l', 115, 381, 80)
